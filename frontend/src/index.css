@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+:root {
+  --color-lime: #d6f32f;
+  --color-dark: #151616;
+  --color-cream: #fffff4;
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: var(--color-cream);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-lime);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #c8e12b;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.5s ease-out;
+}
+
+/* Button styles */
+.shadow-button {
+  box-shadow: 4px 4px 0px 0px var(--color-dark);
+}
+
+.shadow-button-sm {
+  box-shadow: 2px 2px 0px 0px var(--color-dark);
+}
+
+.shadow-button-light {
+  box-shadow: 4px 4px 0px 0px white;
+}
+
+.shadow-button-light-sm {
+  box-shadow: 2px 2px 0px 0px white;
+}
+
+.shadow-button-lime {
+  box-shadow: 4px 4px 0px 0px var(--color-lime);
+}
+
+.shadow-button-lime-sm {
+  box-shadow: 2px 2px 0px 0px var(--color-lime);
+}
+
+/* Background pattern */
+.bg-pattern {
+  background-image: radial-gradient(var(--color-dark) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 3rem;
+  }
+
+  .hero-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+}
