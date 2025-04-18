@@ -43,7 +43,6 @@ The project is divided into two main components:
 - MongoDB
 - Mongoose
 - JWT
-- Stripe
 - Google Generative AI
 - Bcryptjs
 
