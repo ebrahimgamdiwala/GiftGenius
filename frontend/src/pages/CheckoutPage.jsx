@@ -70,7 +70,7 @@ export default function CheckoutPage() {
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     
     if (!user) {
       navigate("/login")
@@ -78,49 +78,125 @@ export default function CheckoutPage() {
     }
     
     try {
-      // In a real app, send the order data to your backend
+      setLoading(true)
       const token = localStorage.getItem("token")
+      
+      if (!token) {
+        throw new Error("Authentication token not found. Please log in again.")
+      }
+      
+      // Prepare order data
+      const orderData = {
+        shippingDetails: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          zipCode: formData.zipCode,
+          country: formData.country,
+          phone: formData.phone,
+        },
+        paymentMethod: "Credit Card",
+        items: cartItems.map(item => ({
+          product: item.product._id,
+          quantity: item.quantity,
+          price: item.product.price
+        })),
+        subtotal: calculateSubtotal(),
+        total: calculateSubtotal() // Add tax and shipping if applicable
+      }
+      
+      console.log("Submitting order:", orderData)
+      console.log("Using token:", token)
+      
       const response = await fetch("http://localhost:5000/api/orders", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          "Authorization": `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          shippingDetails: {
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            email: formData.email,
-            address: formData.address,
-            city: formData.city,
-            state: formData.state,
-            zipCode: formData.zipCode,
-            country: formData.country,
-            phone: formData.phone,
-          },
-          // In a real app, you'd handle payment processing securely
-          // Don't send sensitive payment details to your backend directly
-          paymentMethod: "Credit Card",
-          items: cartItems.map(item => ({
-            productId: item.product._id,
-            quantity: item.quantity,
-            price: item.product.price
-          })),
-          subtotal: calculateSubtotal(),
-          total: calculateSubtotal() // Add tax and shipping if applicable
-        }),
+        body: JSON.stringify(orderData),
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || "Failed to create order")
+        let errorMessage = "Failed to create order";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+          console.error("Server error details:", errorData);
+        } catch (jsonError) {
+          console.error("Error parsing error response:", jsonError);
+        }
+        throw new Error(errorMessage);
       }
 
+      let orderResult;
+      try {
+        orderResult = await response.json();
+        console.log("Order created:", orderResult);
+      } catch (jsonError) {
+        console.error("Error parsing success response:", jsonError);
+        throw new Error("Error processing server response. Order may have been created but details couldn't be retrieved.");
+      }
+      
+      if (!orderResult || !orderResult._id) {
+        throw new Error("Order was created but no order ID was returned");
+      }
+      
+      // Store order ID in localStorage for the confirmation page
+      localStorage.setItem("lastOrderId", orderResult._id);
+      
+      // Clear the cart in the frontend state
+      setCartItems([]);
+      
+      // Also clear the cart in localStorage if you're storing it there
+      try {
+        localStorage.removeItem("cart");
+      } catch (localStorageError) {
+        console.error("Error clearing cart from localStorage:", localStorageError);
+      }
+      
+      // Make an additional request to ensure the cart is cleared on the backend
+      try {
+        await fetch("http://localhost:5000/api/cart/clear", {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        console.log("Cart cleared successfully");
+      } catch (clearCartError) {
+        console.error("Error clearing cart from API:", clearCartError);
+        // Continue with checkout even if this fails
+      }
+      
+      // Clear form data
+      setFormData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        address: "",
+        city: "",
+        state: "",
+        zipCode: "",
+        country: "United States",
+        phone: "",
+        cardName: "",
+        cardNumber: "",
+        expMonth: "",
+        expYear: "",
+        cvv: "",
+      });
+      
       // Navigate to order confirmation page
-      navigate("/order-confirmation")
+      navigate("/order-confirmation");
     } catch (err) {
-      console.error("Order submission error:", err)
-      setError(err.message)
+      console.error("Order submission error:", err);
+      setError(err.message || "Failed to create order. Please try again.");
+    } finally {
+      setLoading(false);
     }
   }
 

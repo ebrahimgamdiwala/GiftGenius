@@ -24,8 +24,23 @@ export default function Navbar() {
       }
     }
 
+    // Close dropdown when clicking outside
+    const handleClickOutside = (event) => {
+      const dropdown = document.querySelector('.dropdown-container')
+      const dropdownMenu = document.querySelector('.dropdown-menu')
+      
+      if (dropdown && !dropdown.contains(event.target) && dropdownMenu) {
+        dropdownMenu.classList.add('hidden')
+      }
+    }
+
     window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
+    document.addEventListener("mousedown", handleClickOutside)
+    
+    return () => {
+      window.removeEventListener("scroll", handleScroll)
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
   }, [])
 
   useEffect(() => {
@@ -58,10 +73,19 @@ export default function Navbar() {
         } catch (error) {
           console.error("Error fetching counts:", error)
         }
+      } else {
+        // Clear counts when user logs out
+        setCartCount(0)
+        setWishlistCount(0)
       }
     }
 
     fetchCounts()
+    
+    // Set up interval to refresh counts every minute
+    const intervalId = setInterval(fetchCounts, 60000)
+    
+    return () => clearInterval(intervalId)
   }, [user])
 
   const handleLogout = () => {
@@ -73,7 +97,7 @@ export default function Navbar() {
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? "bg-white/90 backdrop-blur-md shadow-md" : "bg-transparent"
+        scrolled ? "bg-white shadow-md" : "bg-transparent"
       }`}
     >
       <div className="container mx-auto px-4">
@@ -234,7 +258,7 @@ export default function Navbar() {
                       {wishlistCount}
                     </span>
                   )}
-                  <span className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-xs text-lime">
+                  <span className="absolute -top-8 -right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-xs bg-dark text-white px-2 py-1 rounded-md whitespace-nowrap">
                     Wishlist
                   </span>
                 </Link>
@@ -259,12 +283,12 @@ export default function Navbar() {
                       {cartCount}
                     </span>
                   )}
-                  <span className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-xs text-lime translate-x-6">
+                  <span className="absolute -top-8 -right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-xs bg-dark text-white px-2 py-1 rounded-md whitespace-nowrap">
                     Cart
                   </span>
                 </Link>
-                <div className="relative group">
-                  <Link to="/account" className="text-dark hover:text-lime transition-colors duration-300">
+                <div className="relative dropdown-container">
+                  <button onClick={() => document.querySelector('.dropdown-menu').classList.toggle('hidden')} className="text-dark hover:text-lime transition-colors duration-300">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="24"
@@ -279,8 +303,8 @@ export default function Navbar() {
                       <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
                       <circle cx="12" cy="7" r="4"></circle>
                     </svg>
-                  </Link>
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border-2 border-dark py-2 hidden group-hover:block">
+                  </button>
+                  <div className="dropdown-menu absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-button border-2 border-dark py-2 hidden z-50">
                     <Link
                       to="/account"
                       className="block px-4 py-2 text-dark hover:bg-lime hover:text-dark transition-colors duration-300"
@@ -306,11 +330,14 @@ export default function Navbar() {
             )}
 
             {/* Mobile Menu Button */}
-            <button className="md:hidden text-dark focus:outline-none" onClick={toggleMenu}>
+            <button 
+              className="md:hidden text-dark focus:outline-none w-10 h-10 rounded-lg border-2 border-dark flex items-center justify-center bg-lime shadow-button-sm hover:shadow-none hover:translate-y-1 hover:translate-x-1 transition-all duration-300" 
+              onClick={toggleMenu}
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
+                width="20"
+                height="20"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -325,8 +352,8 @@ export default function Navbar() {
               </svg>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
+                width="20"
+                height="20"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -343,7 +370,7 @@ export default function Navbar() {
         </div>
 
         {/* Mobile Menu */}
-        <div className={`md:hidden ${isMenuOpen ? "block" : "hidden"} pb-4`}>
+        <div className={`md:hidden ${isMenuOpen ? "block" : "hidden"} pb-4 bg-white border-t-2 border-dark/10 mt-2 rounded-b-2xl shadow-lg`}>
           <div className="flex flex-col space-y-4">
             <Link
               to="/"

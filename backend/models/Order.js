@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
-const orderSchema = new mongoose.Schema({
+const orderSchema = new mongoose.Schema({  
+  orderId: {
+    type: String,
+    unique: true,
+    default: () => 'ORD-' + Math.random().toString(36).substring(2, 10).toUpperCase() + '-' + Date.now().toString().substring(7),
+  },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

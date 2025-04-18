@@ -79,6 +79,10 @@ export default function AccountPage() {
 
     const fetchOrders = async () => {
       try {
+        setLoading(true);
+        setError("");
+        console.log("Fetching orders...");
+        
         const token = localStorage.getItem("token");
         if (!token) {
           throw new Error("No authentication token found");
@@ -97,17 +101,27 @@ export default function AccountPage() {
             navigate("/login");
             return;
           }
-          const data = await response.json();
-          throw new Error(data.message || "Failed to fetch orders");
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to fetch orders");
         }
 
         const data = await response.json();
-        setOrders(data);
+        console.log("Orders fetched:", data);
+        
+        if (Array.isArray(data)) {
+          setOrders(data);
+        } else {
+          console.error("Unexpected order data format:", data);
+          setOrders([]);
+        }
       } catch (err) {
         console.error("Failed to fetch orders:", err);
+        setError(err.message || "Failed to load order history");
         if (err.message === "No authentication token found") {
           navigate("/login");
         }
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -483,79 +497,124 @@ export default function AccountPage() {
     </div>
   )
 
-  const renderOrdersTab = () => (
-    <div>
-      <h2 className="text-2xl font-bold mb-6 text-dark">
-        Order History
-      </h2>
-
-      {orders.length === 0 ? (
+  const renderOrdersTab = () => {
+    // Check if orders are still loading
+    if (loading) {
+      return (
         <div className="text-center py-8">
-          <p className="text-gray-500 mb-4">You haven't placed any orders yet.</p>
-          <Link
-            to="/products"
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-lime mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading your orders...</p>
+        </div>
+      );
+    }
+    
+    // Check if there was an error fetching orders
+    if (error) {
+      return (
+        <div className="text-center py-8 bg-red-50 rounded-lg p-4">
+          <p className="text-red-600 mb-4">{error}</p>
+          <button
+            onClick={() => fetchOrders()}
             className="bg-lime text-dark border-2 border-dark shadow-button py-2 px-6 rounded-lg font-medium transition-colors duration-300 hover:bg-cream hover:text-dark hover:shadow-button-sm"
           >
-            Start Shopping
-          </Link>
+            Try Again
+          </button>
         </div>
-      ) : (
-        <div className="space-y-6">
-          {orders.map((order) => (
-            <div key={order._id} className="bg-white rounded-2xl shadow-md overflow-hidden border border-purple-100">
-              <div className="p-6">
-                <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4">
-                  <div>
-                    <h3 className="font-bold">Order #{order._id}</h3>
-                    <p className="text-gray-500">Placed on {new Date(order.createdAt).toLocaleDateString()}</p>
-                  </div>
-                  <div className="mt-2 md:mt-0">
-                    <span
-                      className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                        order.status === "Delivered"
-                          ? "bg-green-100 text-green-800"
-                          : order.status === "Shipped"
-                            ? "bg-lime text-dark border-2 border-dark shadow-button-sm"
-                            : "bg-yellow-100 text-yellow-800"
-                      }`}
-                    >
-                      {order.status}
-                    </span>
-                  </div>
-                </div>
+      );
+    }
+    
+    return (
+      <div>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-dark">
+            Order History
+          </h2>
+          <button
+            onClick={() => fetchOrders()}
+            className="text-lime hover:text-dark transition-colors duration-300 flex items-center"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+              <path d="M21 2v6h-6"></path>
+              <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
+              <path d="M3 12a9 9 0 0 0 15 6.7L21 16"></path>
+              <path d="M21 22v-6h-6"></path>
+            </svg>
+            Refresh
+          </button>
+        </div>
 
-                <div className="border-t border-b py-4 my-4">
-                  {order.items.map((item) => (
-                    <div key={item._id} className="flex justify-between py-2">
-                      <div>
-                        <span>{item.name}</span>
-                        <span className="text-gray-500 ml-2">x{item.quantity}</span>
-                      </div>
-                      <span>${(item.price * item.quantity).toFixed(2)}</span>
+        {orders.length === 0 ? (
+          <div className="text-center py-8 bg-gray-50 rounded-lg">
+            <p className="text-gray-500 mb-4">You haven't placed any orders yet.</p>
+            <Link
+              to="/products"
+              className="bg-lime text-dark border-2 border-dark shadow-button py-2 px-6 rounded-lg font-medium transition-colors duration-300 hover:bg-cream hover:text-dark hover:shadow-button-sm"
+            >
+              Start Shopping
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {orders.map((order) => (
+              <div key={order._id} className="bg-white rounded-2xl shadow-md overflow-hidden border-2 border-dark">
+                <div className="p-6">
+                  <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4">
+                    <div>
+                      <h3 className="font-bold text-lg">Order #{order.orderId || order._id.substring(0, 8)}</h3>
+                      <p className="text-gray-500">Placed on {new Date(order.createdAt).toLocaleDateString()}</p>
                     </div>
-                  ))}
-                </div>
+                    <div className="mt-2 md:mt-0">
+                      <span
+                        className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                          order.isDelivered
+                            ? "bg-green-100 text-green-800"
+                            : order.isPaid
+                              ? "bg-lime text-dark border-2 border-dark shadow-button-sm"
+                              : "bg-yellow-100 text-yellow-800"
+                        }`}
+                      >
+                        {order.isDelivered ? "Delivered" : order.isPaid ? "Paid" : "Processing"}
+                      </span>
+                    </div>
+                  </div>
 
-                <div className="flex justify-between">
-                  <span className="font-bold">Total</span>
-                  <span className="font-bold">${order.total.toFixed(2)}</span>
-                </div>
+                  <div className="border-t border-b py-4 my-4">
+                    {order.items && order.items.map((item, index) => (
+                      <div key={item._id || index} className="flex justify-between py-2">
+                        <div className="flex items-center">
+                          <span className="font-medium">{item.product?.name || 'Product'}</span>
+                          <span className="text-gray-500 ml-2">x{item.quantity}</span>
+                        </div>
+                        <span>${(item.price * item.quantity).toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
 
-                <div className="mt-4 flex justify-end">
-                  <Link
-                    to={`/orders/${order._id}`}
-                    className="text-lime hover:text-dark transition-colors duration-300 font-semibold"
-                  >
-                    View Order Details
-                  </Link>
+                  <div className="flex justify-between">
+                    <span className="font-bold">Total</span>
+                    <span className="font-bold">${order.totalPrice?.toFixed(2) || '0.00'}</span>
+                  </div>
+
+                  <div className="mt-4 flex justify-end">
+                    <button
+                      onClick={() => {
+                        // Store order ID in localStorage for the confirmation page
+                        localStorage.setItem("lastOrderId", order._id);
+                        navigate("/order-confirmation");
+                      }}
+                      className="text-lime hover:text-dark transition-colors duration-300 font-semibold"
+                    >
+                      View Order Details
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  )
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   const renderWishlistTab = () => (
     <div className="py-10">

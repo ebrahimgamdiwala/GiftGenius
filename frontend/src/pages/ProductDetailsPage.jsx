@@ -304,15 +304,15 @@ export default function ProductDetailsPage() {
       </div>
 
       {/* Product Tabs */}
-      <div className="bg-white rounded-2xl shadow-md overflow-hidden mb-16">
+      <div className="bg-white rounded-2xl border-2 border-dark shadow-button overflow-hidden mb-16">
         <div className="border-b">
           <div className="flex overflow-x-auto">
             <button
               onClick={() => setActiveTab("description")}
               className={`px-6 py-3 font-medium text-sm whitespace-nowrap ${
                 activeTab === "description"
-                  ? "border-b-2 border-purple-600 text-purple-600"
-                  : "text-gray-500 hover:text-gray-700"
+                  ? "border-b-2 border-lime text-dark font-bold"
+                  : "text-dark/60 hover:text-dark"
               }`}
             >
               Description
@@ -321,8 +321,8 @@ export default function ProductDetailsPage() {
               onClick={() => setActiveTab("specifications")}
               className={`px-6 py-3 font-medium text-sm whitespace-nowrap ${
                 activeTab === "specifications"
-                  ? "border-b-2 border-purple-600 text-purple-600"
-                  : "text-gray-500 hover:text-gray-700"
+                  ? "border-b-2 border-lime text-dark font-bold"
+                  : "text-dark/60 hover:text-dark"
               }`}
             >
               Specifications
@@ -331,8 +331,8 @@ export default function ProductDetailsPage() {
               onClick={() => setActiveTab("reviews")}
               className={`px-6 py-3 font-medium text-sm whitespace-nowrap ${
                 activeTab === "reviews"
-                  ? "border-b-2 border-purple-600 text-purple-600"
-                  : "text-gray-500 hover:text-gray-700"
+                  ? "border-b-2 border-lime text-dark font-bold"
+                  : "text-dark/60 hover:text-dark"
               }`}
             >
               Reviews ({(product.reviews || []).length})
@@ -385,7 +385,7 @@ export default function ProductDetailsPage() {
                 </div>
               ))}
 
-              <button className="mt-4 border border-purple-600 text-purple-600 px-4 py-2 rounded-lg hover:bg-purple-50 transition-colors duration-300">
+              <button className="mt-4 bg-white text-dark px-4 py-2 rounded-lg font-bold border-2 border-dark shadow-button-sm hover:shadow-none hover:translate-y-1 hover:translate-x-1 transition-all duration-300">
                 Write a Review
               </button>
             </div>
