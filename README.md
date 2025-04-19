@@ -16,7 +16,6 @@ The project is divided into two main components:
 - Node.js and Express.js server
 - MongoDB database with Mongoose ODM
 - JWT authentication
-- Stripe integration for payments
 - Google's Generative AI integration for gift recommendations
 
 ## Features
@@ -44,7 +43,6 @@ The project is divided into two main components:
 - MongoDB
 - Mongoose
 - JWT
-- Stripe
 - Google Generative AI
 - Bcryptjs
 
