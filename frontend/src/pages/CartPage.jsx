@@ -76,7 +76,7 @@ export default function CartPage() {
   const removeItem = async (productId) => {
     try {
       const token = localStorage.getItem("token")
-      const response = await fetch(`http://localhost:5000/api/cart/${productId}`, {
+      const response = await fetch(`http://localhost:5000/api/cart/remove/${productId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -88,8 +88,10 @@ export default function CartPage() {
         throw new Error(errorData.message || "Failed to remove item")
       }
 
-      const updatedCart = await response.json()
-      setCartItems(updatedCart.items || [])
+      // Update state locally instead of relying on server response
+      setCartItems(prevItems => 
+        prevItems.filter(item => item.product._id !== productId)
+      )
     } catch (err) {
       console.error("Remove item error:", err)
       setError(err.message)
@@ -97,7 +99,11 @@ export default function CartPage() {
   }
 
   const calculateSubtotal = () => {
-    return cartItems.reduce((total, item) => total + item.product.price * item.quantity, 0)
+    return cartItems.reduce((total, item) => {
+      const price = item.product && typeof item.product.price === 'number' ? item.product.price : 0;
+      const quantity = typeof item.quantity === 'number' ? item.quantity : 0;
+      return total + price * quantity;
+    }, 0);
   }
 
   if (!user) {
@@ -218,11 +224,17 @@ export default function CartPage() {
 
                     <div className="md:hidden flex justify-between">
                       <span className="text-dark/70">Price:</span>
-                      <span className="text-dark">${item.product.price.toFixed(2)}</span>
+                      <span className="text-dark">
+                        {item.product && typeof item.product.price === 'number' 
+                          ? `$${item.product.price.toFixed(2)}` 
+                          : 'N/A'}
+                      </span>
                     </div>
 
                     <div className="hidden md:block md:col-span-2 text-center text-dark">
-                      ${item.product.price.toFixed(2)}
+                      {item.product && typeof item.product.price === 'number' 
+                        ? `$${item.product.price.toFixed(2)}` 
+                        : 'N/A'}
                     </div>
 
                     <div className="md:hidden flex justify-between items-center">
@@ -269,12 +281,16 @@ export default function CartPage() {
                     <div className="md:hidden flex justify-between">
                       <span className="text-dark/70">Total:</span>
                       <span className="font-medium text-dark">
-                        ${(item.product.price * item.quantity).toFixed(2)}
+                        {item.product && typeof item.product.price === 'number' && typeof item.quantity === 'number'
+                          ? `$${(item.product.price * item.quantity).toFixed(2)}`
+                          : '$0.00'}
                       </span>
                     </div>
 
                     <div className="hidden md:block md:col-span-2 text-center font-medium text-dark">
-                      ${(item.product.price * item.quantity).toFixed(2)}
+                      {item.product && typeof item.product.price === 'number' && typeof item.quantity === 'number'
+                        ? `$${(item.product.price * item.quantity).toFixed(2)}`
+                        : '$0.00'}
                     </div>
                   </div>
                 ))}
